@@ -13,6 +13,7 @@ public class SafeReports {
     public static void main(String[] args) throws IOException {
         List<List<Integer>> reports = readInput();
         System.out.println("The number of safe reports is : " + filterSafeReports(reports).size());
+        System.out.println("The number of safe reports with dampener is : " + filterSafeReportsWithDampener(reports).size());
     }
 
     public static List<List<Integer>> readInput() throws IOException {
@@ -22,8 +23,8 @@ public class SafeReports {
             Arrays.stream(line.splitWithDelimiters("\\s+", 0))
                     .filter((s) -> !s.matches("^\\s+$"))
                     .forEach((s) -> {
-                report.add(Integer.parseInt(s));
-            });
+                        report.add(Integer.parseInt(s));
+                    });
             reports.add(report);
         });
         return reports;
@@ -33,42 +34,66 @@ public class SafeReports {
         return reports.stream().filter(SafeReports::isSafeReport).collect(Collectors.toList());
     }
 
+    public static List<List<Integer>> filterSafeReportsWithDampener(List<List<Integer>> reports) {
+        return reports.stream().filter(SafeReports::isSafeWithDampener).collect(Collectors.toList());
+    }
+
+    public static boolean isSafeWithDampener(List<Integer> report) {
+        boolean isSafe = isSafeReport(report);
+        if (isSafe) {
+            return true;
+        }
+
+        for (int i = 0; i < report.size(); i++) {
+            List<Integer> dampenedReport = new ArrayList<>();
+            for (int j = 0; j < report.size(); j++) {
+                if (i != j) {
+                    dampenedReport.add(report.get(j));
+                }
+            }
+            if (isSafeReport(dampenedReport)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static boolean isSafeReport(List<Integer> report) {
         ReportTrend type = ReportTrend.INITIAL;
         int previous = report.get(0);
-        for( int i = 1; i < report.size(); i++) {
+        for (int i = 1; i < report.size(); i++) {
             int current = report.get(i);
             int step = current - previous;
 
             // Check the trend of the report
             switch (type) {
                 case INITIAL:
-                    if ( step > 0 ) {
+                    if (step > 0) {
                         type = ReportTrend.INCREASING;
-                    } else if ( step < 0 ) {
+                    } else if (step < 0) {
                         type = ReportTrend.DECREASING;
                     } else {
                         return false;
                     }
                     break;
                 case INCREASING:
-                    if ( step < 0 ) {
+                    if (step < 0) {
                         return false;
                     }
                     break;
                 case DECREASING:
-                    if ( step > 0 ) {
+                    if (step > 0) {
                         return false;
                     }
                     break;
             }
 
             // Check magnitude of change
-            if ( Math.abs(step) < 1 || Math.abs(step) > 4 ) {
+            if (Math.abs(step) < 1 || Math.abs(step) > 3) {
                 return false;
             }
 
-            if ( previous == current ) {
+            if (previous == current) {
                 return false;
             }
 
